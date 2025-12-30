@@ -19,6 +19,18 @@ class MessageType(str, Enum):
     MEMORY_RECALL = "memory_recall"
 
 
+class MemoryType(str, Enum):
+    """Memory types following cognitive science classification.
+    
+    SEMANTIC: Facts, concepts, and general knowledge (relatively stable)
+    EPISODIC: Events, conversations, and specific experiences (time-bound)
+    PROCEDURAL: Behavioral patterns, preferences, and style rules
+    """
+    SEMANTIC = "semantic"
+    EPISODIC = "episodic"
+    PROCEDURAL = "procedural"
+
+
 class Message(BaseModel):
     role: MessageRole
     content: str
@@ -39,10 +51,21 @@ class MemoryEntry(BaseModel):
     metadata: Dict[str, Any] = Field(default_factory=dict)
     hash: str
     message_type: MessageType = MessageType.USER_INPUT
-
+    
+    # Enhanced fields for advanced memory management
+    memory_type: MemoryType = Field(default=MemoryType.EPISODIC)
+    importance_score: float = Field(default=0.5, ge=0.0, le=1.0)
+    access_count: int = Field(default=0, ge=0)
+    last_accessed: Optional[datetime] = None
+    
     class Config:
         validate_assignment = True
         use_enum_values = True
+    
+    def increment_access(self) -> None:
+        """Track memory access for retrieval optimization."""
+        self.access_count += 1
+        self.last_accessed = datetime.utcnow()
 
 
 class AgentState(BaseModel):
@@ -127,4 +150,42 @@ class AgentState(BaseModel):
             "fact_count": len(self.facts),
             "last_updated": self.last_updated.isoformat(),
             "context": self.context
+        }
+    
+    def get_memories_by_type(self, memory_type: 'MemoryType') -> List[MemoryEntry]:
+        """Get all memories of a specific type."""
+        return [mem for mem in self.memories.values() if mem.memory_type == memory_type]
+    
+    def get_memory_stats(self) -> Dict[str, Any]:
+        """Get statistics about stored memories."""
+        memories_list = list(self.memories.values())
+        
+        if not memories_list:
+            return {
+                "total": 0,
+                "by_type": {},
+                "avg_importance": 0.0,
+                "most_accessed": None
+            }
+        
+        semantic_count = sum(1 for m in memories_list if m.memory_type == MemoryType.SEMANTIC)
+        episodic_count = sum(1 for m in memories_list if m.memory_type == MemoryType.EPISODIC)
+        procedural_count = sum(1 for m in memories_list if m.memory_type == MemoryType.PROCEDURAL)
+        
+        avg_importance = sum(m.importance_score for m in memories_list) / len(memories_list)
+        most_accessed = max(memories_list, key=lambda m: m.access_count)
+        
+        return {
+            "total": len(memories_list),
+            "by_type": {
+                "semantic": semantic_count,
+                "episodic": episodic_count,
+                "procedural": procedural_count
+            },
+            "avg_importance": round(avg_importance, 3),
+            "most_accessed": {
+                "id": most_accessed.id,
+                "type": most_accessed.memory_type,
+                "access_count": most_accessed.access_count
+            }
         }
