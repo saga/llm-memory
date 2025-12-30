@@ -76,19 +76,6 @@ $env:OPENAI_API_KEY = "sk-..."
 
 ---
 
-### 📦 其他演示
-
-**`simple_demo.py`** - 基础功能演示
-- 使用旧 API 的简单演示
-- 适合了解基础概念
-
-**`financial_demo.py`** - 金融场景演示
-- 金融咨询场景
-- 状态机工作流
-- 专业领域应用
-
----
-
 ## 📊 演示特性对比
 
 | 演示 | 代码行数 | API Key | 用途 | 难度 |
@@ -96,8 +83,6 @@ $env:OPENAI_API_KEY = "sk-..."
 | `simple_memory.py` | 150 | ❌ | 学习核心概念 | ⭐ |
 | `comparison.py` | 300 | ❌ | 理解价值 | ⭐ |
 | `pydantic_ai_demo.py` | 400 | ✅ | 查看完整功能 | ⭐⭐ |
-| `simple_demo.py` | 100 | ❌ | 基础功能 | ⭐ |
-| `financial_demo.py` | 200 | ❌ | 专业场景 | ⭐⭐⭐ |
 
 ---
 

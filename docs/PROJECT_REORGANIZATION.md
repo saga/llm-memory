@@ -38,43 +38,35 @@ llm-memory/
 
 ---
 
-### 现在（清晰）
+### 现在（专业且极简）
 
 ```
 llm-memory/
 ├── README.md                   # ⭐ 主入口（简洁）
 │
-├── demos/                      # 📱 所有演示
+├── demos/                      # 📱 核心演示
 │   ├── README.md              # 演示导航
 │   ├── simple_memory.py       # 极简实现
 │   ├── pydantic_ai_demo.py    # 完整演示
-│   ├── comparison.py          # 新旧对比
-│   ├── simple_demo.py         # 基础演示
-│   └── financial_demo.py      # 金融场景
+│   └── comparison.py          # 新旧对比
 │
 ├── docs/                       # 📖 所有文档
 │   ├── README.md              # 文档导航
 │   ├── START_HERE.md          # 快速开始
-│   ├── SETUP.md               # 环境设置
-│   ├── README_PYDANTICAI.md   # 主文档
-│   ├── QUICKSTART_PYDANTICAI.md
-│   ├── PROJECT_MEMORY.md
-│   ├── PYDANTIC_AI_MIGRATION.md
-│   ├── BEFORE_AFTER_COMPARISON.md
-│   ├── MEMORY_TYPES_GUIDE.md
-│   ├── SUMMARIZATION_GUIDE.md
-│   ├── FRAMEWORK_UPDATES.md
-│   ├── CLEANUP_*.md
-│   └── COMPLETION_SUMMARY.md
+│   ├── PROJECT_MEMORY.md      # 项目记忆
+│   └── ... (14个文档)
 │
-├── framework/                  # 🎯 核心框架（已精简）
+├── framework/                  # 🎯 核心框架（PydanticAI）
 │   ├── state.py
 │   ├── summarization.py
 │   └── pydantic_agent.py
 │
-├── legacy/                     # 📦 旧代码归档
-├── tests/                      # 🧪 测试
-├── app/                        # 🌐 API 应用
+├── legacy/                     # 📦 旧代码归档 (LangGraph/V1/V2)
+│   ├── app/                   # 旧 API 应用
+│   ├── tests/                 # 旧测试
+│   ├── graph.py, nodes.py...  # 旧框架代码
+│   ├── chat_api.py...         # 旧 API 接口
+│   └── simple_demo.py...      # 旧演示
 │
 ├── activate.ps1                # 快速激活
 └── setup_and_run.ps1          # 一键启动
@@ -82,9 +74,9 @@ llm-memory/
 
 **优势：**
 - ✅ 职责清晰：演示、文档、框架分离
-- ✅ 易于导航：每个目录有 README
-- ✅ 专业结构：符合开源项目规范
-- ✅ 新人友好：一目了然
+- ✅ 根目录极简：只保留核心脚本和主入口
+- ✅ 兼容性：旧代码全部归档至 legacy/，不干扰新开发
+- ✅ 专业结构：符合生产级项目规范
 
 ---
 
@@ -97,6 +89,22 @@ llm-memory/
 ---
 
 ## 🔄 移动的文件
+
+### 根目录清理
+- `chat_api.py` -> `legacy/chat_api.py`
+- `chat_api_v2.py` -> `legacy/chat_api_v2.py`
+- `memory_system.py` -> `legacy/memory_system.py`
+- `main.py` -> (已删除)
+- `app/` -> `legacy/app/`
+- `tests/` -> `legacy/tests/`
+- `*.db` -> `legacy/` (审计日志归档)
+
+### 演示文件 (demos/)
+- `simple_memory.py`
+- `pydantic_ai_demo.py`
+- `comparison.py`
+- `simple_demo.py` -> `legacy/simple_demo.py` (已失效)
+- `financial_demo.py` -> `legacy/financial_demo.py` (已失效)
 
 ### 演示文件 → `demos/`
 
