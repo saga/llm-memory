@@ -2,12 +2,12 @@
 简化版状态机实现 - 修复版本，无LangGraph依赖
 """
 from typing import Dict, Any, Optional, List, Callable
-from simple_state import AgentState, FinancialAgentState
-from simple_nodes import (
-    planner_node, memory_recall_node, decision_node, 
-    response_generator_node, memory_storage_node, compliance_check_node
+from framework.state import AgentState
+from framework.nodes import (
+    planner_node, memory_recall_node, decision_node,
+    response_generator_node, memory_storage_node
 )
-from simple_policy import routing_policy
+from framework.policy import routing_policy
 
 
 class SimpleStateMachine:
@@ -92,7 +92,6 @@ def create_simple_base_graph(state_class: type = AgentState) -> CompiledStateMac
     builder.add_node("decision", decision_node)
     builder.add_node("response_generator", response_generator_node)
     builder.add_node("memory_storage", memory_storage_node)
-    builder.add_node("compliance_check", compliance_check_node)
     
     # 设置入口点
     builder.set_entry_point("planner")
@@ -101,8 +100,7 @@ def create_simple_base_graph(state_class: type = AgentState) -> CompiledStateMac
     builder.add_edge("planner", "memory_recall")
     builder.add_edge("memory_recall", "decision")
     builder.add_edge("decision", "response_generator")
-    builder.add_edge("response_generator", "compliance_check")
-    builder.add_edge("compliance_check", "memory_storage")
+    builder.add_edge("response_generator", "memory_storage")
     
     # 添加条件边
     builder.add_conditional_edges(
@@ -119,8 +117,8 @@ def create_simple_base_graph(state_class: type = AgentState) -> CompiledStateMac
 
 
 def create_simple_financial_graph() -> CompiledStateMachine:
-    """创建简化版金融专用图"""
-    return create_simple_base_graph(FinancialAgentState)
+    """创建简化版金融专用图（应用层实现，框架保持通用）"""
+    return create_simple_base_graph(AgentState)
 
 
 def run_simple_agent_workflow(

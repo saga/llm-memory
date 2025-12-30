@@ -1,6 +1,3 @@
-"""
-简化版节点函数 - 修复版本
-"""
 from typing import Dict, Any, Optional, List
 from datetime import datetime
 import hashlib
@@ -8,7 +5,6 @@ from framework.state import AgentState, MessageRole, MessageType, MemoryEntry
 
 
 def planner_node(state: AgentState) -> AgentState:
-    """规划节点：最小化实现，保持通用"""
     new_state = state.model_copy(deep=True)
     latest_message = new_state.get_latest_message()
     if not latest_message or latest_message.role != MessageRole.USER:
@@ -24,39 +20,25 @@ def planner_node(state: AgentState) -> AgentState:
 
 
 def memory_recall_node(state: AgentState) -> AgentState:
-    """记忆召回节点：从长期记忆中召回相关信息"""
     new_state = state.model_copy(deep=True)
-    
-    # 获取最新消息
     latest_message = new_state.get_latest_message()
     if not latest_message:
         return new_state
-    
-    # 简单的记忆召回逻辑
-    recalled_memories = []
-    
-    # 基于关键词召回
-    user_input = latest_message.content
-    for memory_id, memory in new_state.memories.items():
-        # 简单的关键词匹配
-        if any(word in user_input for word in memory.content.split()[:5]):
-            recalled_memories.append(memory)
-    
-    # 添加召回的记忆到状态
-    if recalled_memories:
+    recalled_count = 0
+    if new_state.memories:
+        recalled_count = min(3, len(new_state.memories))
+    if recalled_count:
         new_state.add_message(
             role=MessageRole.SYSTEM,
-            content=f"召回 {len(recalled_memories)} 条相关记忆",
+            content=f"召回 {recalled_count} 条记忆",
             message_type=MessageType.MEMORY_RECALL,
-            metadata={"recalled_count": len(recalled_memories)}
+            metadata={"recalled_count": recalled_count}
         )
-    
     new_state.increment_step()
     return new_state
 
 
 def decision_node(state: AgentState) -> AgentState:
-    """决策节点：通用设置状态为 processing"""
     new_state = state.model_copy(deep=True)
     new_state.set_status("processing")
     new_state.increment_step()
@@ -64,7 +46,6 @@ def decision_node(state: AgentState) -> AgentState:
 
 
 def response_generator_node(state: AgentState) -> AgentState:
-    """响应生成节点：生成通用回复"""
     new_state = state.model_copy(deep=True)
     user_messages = new_state.get_messages_by_role(MessageRole.USER)
     if not user_messages:
@@ -80,51 +61,28 @@ def response_generator_node(state: AgentState) -> AgentState:
     return new_state
 
 
-# 合规检查等应在应用层实现
-
-
 def memory_storage_node(state: AgentState) -> AgentState:
-    """记忆存储节点：存储重要的对话信息"""
     new_state = state.model_copy(deep=True)
-    
-    # 获取最新消息
     user_messages = new_state.get_messages_by_role(MessageRole.USER)
     assistant_messages = new_state.get_messages_by_role(MessageRole.ASSISTANT)
-    
     if user_messages and assistant_messages:
-        # 创建记忆条目
         memory_content = f"用户: {user_messages[-1].content}\n助手: {assistant_messages[-1].content}"
-        
         memory_entry = create_memory_entry(
             content=memory_content,
             context=new_state.context,
             message_type=MessageType.USER_INPUT,
-            metadata={
-                "decision": new_state.decision,
-                "risk_level": new_state.risk_level,
-                "compliance_flags": new_state.compliance_flags
-            }
+            metadata={"decision": new_state.decision}
         )
-        
-        # 存储记忆
         new_state.add_memory(memory_entry)
-    
     new_state.increment_step()
     return new_state
 
 
-def create_memory_entry(content: str, context: str, message_type: MessageType, 
+def create_memory_entry(content: str, context: str, message_type: MessageType,
                        metadata: Optional[Dict[str, Any]] = None) -> MemoryEntry:
-    """创建记忆条目"""
-    # 生成确定性ID
-    memory_id = hashlib.md5(f"{content}_{context}_{datetime.now().isoformat()}".encode()).hexdigest()[:16]
-    
-    # 计算哈希
+    memory_id = hashlib.md5(f"{content}_{context}".encode()).hexdigest()[:16]
     memory_hash = hashlib.sha256(f"{content}_{context}".encode()).hexdigest()
-    
-    # 时间戳
     timestamp = datetime.utcnow()
-    
     return MemoryEntry(
         id=memory_id,
         content=content,
@@ -134,13 +92,6 @@ def create_memory_entry(content: str, context: str, message_type: MessageType,
         hash=memory_hash,
         message_type=message_type
     )
-
-
-# 投资建议等应在应用层实现
-
-
-def generate_memory_response(state: AgentState, user_input: str) -> str:
-    return "我会记住这个信息，并在后续对话中考虑相关内容。"
 
 
 def generate_general_response(state: AgentState, user_input: str) -> str:

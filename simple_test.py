@@ -5,11 +5,11 @@ import sys
 import os
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
-from simple_state import AgentState, FinancialAgentState, MessageRole, MessageType
+from framework.state import AgentState, MessageRole, MessageType
 from simple_graph import SimpleStateMachine, CompiledStateMachine, create_simple_base_graph, create_simple_financial_graph
-from simple_audit import SimpleAuditLog, SimpleFinancialAuditLog
-from simple_nodes import planner_node, memory_recall_node, decision_node, response_generator_node
-from simple_policy import routing_policy, compliance_policy, memory_retention_policy
+from framework.audit import SimpleAuditLog
+from framework.nodes import planner_node, memory_recall_node, decision_node, response_generator_node
+from framework.policy import routing_policy, memory_retention_policy
 
 
 def test_simple_state():
@@ -25,15 +25,7 @@ def test_simple_state():
     print(f"✅ 消息数量: {len(state.messages)}")
     print(f"✅ 状态哈希: {state.compute_hash()}")
     
-    # 测试金融状态
-    financial_state = FinancialAgentState(session_id="financial_test_001")
-    financial_state.set_risk_profile("medium", {"age": 30, "experience": "intermediate"})
-    financial_state.add_compliance_flag("test_flag")
-    
-    print(f"✅ 金融状态创建: {financial_state.session_id}")
-    print(f"✅ 风险档案: {financial_state.risk_profile}")
-    print(f"✅ 合规标记: {financial_state.compliance_flags}")
-    print(f"✅ 状态哈希: {financial_state.compute_hash()}")
+    print("✅ 通用状态模型测试完成")
 
 
 def test_simple_state_machine():
@@ -73,13 +65,7 @@ def test_simple_graph():
     print(f"✅ 基础图运行: {result.session_id}")
     print(f"✅ 消息数量: {len(result.messages)}")
     
-    # 测试金融图
-    financial_graph = create_simple_financial_graph()
-    financial_state = FinancialAgentState(session_id="financial_graph_test_001")
-    financial_result = financial_graph.invoke(financial_state, max_steps=3)
-    
-    print(f"✅ 金融图运行: {financial_result.session_id}")
-    print(f"✅ 消息数量: {len(financial_result.messages)}")
+    print("✅ 基础图测试完成")
 
 
 def test_simple_audit():
@@ -116,12 +102,6 @@ def test_simple_policy():
     state = AgentState(session_id="policy_test_001")
     route = routing_policy(state)
     print(f"✅ 路由策略: {route}")
-    
-    # 测试合规策略
-    financial_state = FinancialAgentState(session_id="compliance_test_001")
-    financial_state.decision = "investment_advice"
-    compliance = compliance_policy(financial_state)
-    print(f"✅ 合规策略: {compliance}")
     
     # 测试记忆保留策略
     retention = memory_retention_policy(state, "投资建议")
