@@ -359,7 +359,6 @@ llm-memory/
 │   ├── nodes.py              # Workflow nodes + summarization
 │   ├── graph.py              # Workflow graph builder
 │   ├── policy.py             # Routing policies
-│   ├── audit.py              # Audit logging
 │   └── summarization.py      # Summarization module (NEW)
 ├── memory_types_demo.py       # Memory types demo (NEW)
 ├── summarization_demo.py      # Summarization demo (NEW)

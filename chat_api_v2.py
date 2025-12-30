@@ -4,7 +4,6 @@ from typing import Dict, Any, Optional, List
 from datetime import datetime
 from state import AgentState, FinancialAgentState, Message, MessageRole, MessageType
 from graph import get_graph, run_agent_workflow
-from audit import AuditLog, FinancialAuditLog
 from policy import compliance_policy, memory_retention_policy
 import uuid
 
@@ -17,7 +16,6 @@ class LLMChatWithMemoryV2:
                  model: str = "gpt-3.5-turbo",
                  temperature: float = 0.1,
                  max_tokens: int = 1000,
-                 audit_log_path: str = "audit.db",
                  graph_type: str = "base"):
         
         self.api_key = api_key or os.getenv("OPENAI_API_KEY")
@@ -30,35 +28,12 @@ class LLMChatWithMemoryV2:
         self.max_tokens = max_tokens
         self.graph_type = graph_type
         
-        # 初始化审计日志
-        self.audit_log = AuditLog(audit_log_path)
-        
         # 获取图
         self.graph = get_graph(graph_type)
     
     def create_session(self, user_id: Optional[str] = None, context: str = "default") -> str:
         """创建新会话"""
         session_id = str(uuid.uuid4())
-        
-        # 创建初始状态
-        if self.graph_type == "financial":
-            initial_state = FinancialAgentState(
-                session_id=session_id,
-                user_id=user_id,
-                context=context,
-                compliance_level="retail",
-                risk_level="medium"
-            )
-        else:
-            initial_state = AgentState(
-                session_id=session_id,
-                user_id=user_id,
-                context=context
-            )
-        
-        # 记录初始状态
-        self.audit_log.append_state(initial_state, "session_start")
-        
         return session_id
     
     def chat_completion(self, 
@@ -95,9 +70,6 @@ class LLMChatWithMemoryV2:
             message_type=MessageType.USER_INPUT
         )
         
-        # 记录用户消息
-        self.audit_log.append_message(session_id, current_state.get_latest_message())
-        
         # 合规检查
         if not compliance_policy(current_state):
             return {
@@ -116,9 +88,6 @@ class LLMChatWithMemoryV2:
             response = assistant_messages[-1].content
         else:
             response = "抱歉，我无法生成合适的响应。"
-        
-        # 记录最终状态
-        self.audit_log.append_state(final_state, "completion")
         
         return {
             "response": response,
@@ -143,18 +112,6 @@ class LLMChatWithMemoryV2:
         else:
             return AgentState(session_id=session_id)
     
-    def get_session_history(self, session_id: str, limit: int = 50) -> List[Dict[str, Any]]:
-        """获取会话历史"""
-        return self.audit_log.get_session_history(session_id, limit)
-    
-    def get_compliance_report(self, session_id: str) -> Dict[str, Any]:
-        """获取合规报告"""
-        return self.audit_log.get_compliance_report(session_id)
-    
-    def verify_session_integrity(self, session_id: str) -> bool:
-        """验证会话完整性"""
-        return self.audit_log.verify_state_integrity(session_id)
-    
     def search_memories(self, session_id: str, query: str, limit: int = 10) -> List[Dict[str, Any]]:
         """搜索记忆"""
         # 获取状态
@@ -178,19 +135,14 @@ class LLMChatWithMemoryV2:
     
     def close_session(self, session_id: str) -> Dict[str, Any]:
         """关闭会话"""
-        # 获取最终状态
         state = self._get_current_state(session_id)
         state.set_status("complete")
-        
-        # 记录会话结束
-        self.audit_log.append_state(state, "session_end")
         
         return {
             "session_id": session_id,
             "status": "closed",
             "total_steps": state.step,
-            "total_memories": len(state.memories),
-            "compliance_status": "compliant" if state.is_compliant() else "non_compliant"
+            "total_memories": len(state.memories)
         }
 
 
@@ -199,25 +151,13 @@ class FinancialLLMChat(LLMChatWithMemoryV2):
     
     def __init__(self, **kwargs):
         kwargs["graph_type"] = "financial"
-        kwargs["audit_log_path"] = kwargs.get("audit_log_path", "financial_audit.db")
         super().__init__(**kwargs)
-        
-        # 使用金融专用审计日志
-        self.audit_log = FinancialAuditLog(kwargs.get("audit_log_path", "financial_audit.db"))
     
     def set_risk_profile(self, session_id: str, risk_level: str, factors: Dict[str, Any]) -> None:
         """设置风险画像"""
         state = self._get_current_state(session_id)
         if isinstance(state, FinancialAgentState):
             state.set_risk_profile(risk_level, factors)
-            
-            # 记录风险评估
-            self.audit_log.log_risk_assessment(
-                session_id=session_id,
-                risk_level=risk_level,
-                risk_factors=factors,
-                recommendation_type="initial_assessment"
-            )
     
     def set_investment_limit(self, session_id: str, limit: float) -> None:
         """设置投资限额"""
@@ -246,8 +186,7 @@ def demo_financial_chat_v2():
         # 初始化金融专用聊天系统
         chat = FinancialLLMChat(
             model="gpt-3.5-turbo",
-            temperature=0.1,
-            audit_log_path="demo_financial_audit.db"
+            temperature=0.1
         )
         
         # 创建会话

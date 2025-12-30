@@ -3,7 +3,6 @@ from typing import Dict, Any, Optional, List
 from datetime import datetime
 from framework.state import AgentState, Message, MessageRole, MessageType
 from framework.graph import run_simple_agent_workflow
-from framework.audit import SimpleAuditLog
 from framework.policy import memory_retention_policy
 from app.financial.financial_state import FinancialAgentState
 import uuid
@@ -18,16 +17,12 @@ class SimpleLLMChatWithMemory:
                  model: str = "gpt-3.5-turbo",
                  temperature: float = 0.1,
                  max_tokens: int = 1000,
-                 audit_log_path: str = "audit.db",
                  graph_type: str = "base"):
         
         self.model = model
         self.temperature = temperature
         self.max_tokens = max_tokens
         self.graph_type = graph_type
-        
-        # 初始化审计日志
-        self.audit_log = SimpleAuditLog(audit_log_path)
             
         # 会话存储
         self.sessions: Dict[str, AgentState] = {}

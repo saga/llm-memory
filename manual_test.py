@@ -62,42 +62,9 @@ try:
 except Exception as e:
     print(f"❌ 状态模型测试失败: {e}")
     sys.exit(1)
-
-# 2. 测试审计系统
-print("\n2️⃣ 测试审计系统...")
+# 2. 测试状态管理
+print("\n2️⃣ 测试状态管理...")
 try:
-    from audit import AuditLog, FinancialAuditLog
-    
-    # 创建临时文件
-    temp_dir = tempfile.mkdtemp()
-    audit_path = os.path.join(temp_dir, "test_audit.db")
-    
-    try:
-        audit_log = AuditLog(audit_path)
-        
-        # 测试状态审计
-        state = AgentState(
-            session_id="test_session",
-            step=1,
-            status="processing"
-        )
-        
-        audit_log.append_state(state, "test_transition")
-        
-        # 验证审计记录
-        history = audit_log.get_session_history("test_session")
-        assert len(history) == 1
-        assert history[0]["step"] == 1
-        print("✅ 状态审计测试通过")
-        
-        audit_log.close()
-        
-    finally:
-        if os.path.exists(audit_path):
-            os.remove(audit_path)
-        os.rmdir(temp_dir)
-    
-except Exception as e:
     print(f"❌ 审计系统测试失败: {e}")
     sys.exit(1)
 

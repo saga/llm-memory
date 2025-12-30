@@ -4,7 +4,6 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from framework.state import AgentState, MessageRole, MessageType
 from framework.graph import SimpleStateMachine, CompiledStateMachine, create_simple_base_graph
-from framework.audit import SimpleAuditLog
 from framework.nodes import planner_node, memory_recall_node, decision_node, response_generator_node
 from framework.policy import routing_policy, memory_retention_policy
 

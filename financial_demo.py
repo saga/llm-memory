@@ -27,12 +27,10 @@ def main():
         financial_chat = FinancialLLMChat(
             api_key=os.getenv("OPENAI_API_KEY", "your-api-key-here"),
             model="gpt-3.5-turbo",
-            temperature=0.1,  # 低温度确保确定性结果
-            audit_log_path="financial_demo_audit.db"
+            temperature=0.1  # 低温度确保确定性结果
         )
         
         print("✅ 系统初始化成功")
-        print(f"📊 审计日志路径: financial_demo_audit.db")
         print(f"🌡️  LLM温度设置: 0.1 (确保确定性)")
         
     except Exception as e:
@@ -203,15 +201,12 @@ def main():
     print("\n✅ 系统特性验证:")
     print("  - Pydantic强一致性状态管理")
     print("  - LangGraph显式状态机控制")
-    print("  - SQLite审计日志记录")
     print("  - 金融风险评估功能")
     print("  - 合规检查和风险披露")
     print("  - 智能记忆和上下文管理")
     print("  - 确定性结果保证 (temperature=0.1)")
     
     print("\n🚀 系统已准备好用于生产环境！")
-    print("\n📁 生成的文件:")
-    print("  - financial_demo_audit.db (审计日志)")
     
     return True
 

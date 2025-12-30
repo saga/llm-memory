@@ -171,19 +171,6 @@ class AgentState(BaseModel):
     def set_status(self, status: Literal["idle", "processing", "waiting_input", "error", "complete"]) -> None:
         self.status = status
         self.last_updated = datetime.utcnow()
-
-    def get_audit_info(self) -> Dict[str, Any]:
-        return {
-            "session_id": self.session_id,
-            "user_id": self.user_id,
-            "step": self.step,
-            "status": self.status,
-            "message_count": len(self.messages),
-            "memory_count": len(self.memories),
-            "fact_count": len(self.facts),
-            "last_updated": self.last_updated.isoformat(),
-            "context": self.context
-        }
     
     def get_memories_by_type(self, memory_type: 'MemoryType') -> List[MemoryEntry]:
         """Get all memories of a specific type."""
