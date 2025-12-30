@@ -4,7 +4,7 @@
 import os
 import sys
 from datetime import datetime
-from simple_chat_api import SimpleFinancialLLMChat
+from app.service.chat import SimpleFinancialLLMChat
 from framework.state import MessageRole, MessageType
 
 

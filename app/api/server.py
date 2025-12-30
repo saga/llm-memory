@@ -1,7 +1,7 @@
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from typing import Optional, Dict, Any, List
-from simple_chat_api import SimpleLLMChatWithMemory, SimpleFinancialLLMChat
+from app.service.chat import SimpleLLMChatWithMemory, SimpleFinancialLLMChat
 
 
 class CreateSessionRequest(BaseModel):

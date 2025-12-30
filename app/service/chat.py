@@ -67,7 +67,7 @@ class SimpleLLMChatWithMemory:
         return True
     
     def get_chat_completion(self, session_id: str, user_input: str) -> str:
-        """获取聊天完成，带记忆功能"""
+        """获取聊天完成，带记忆功能（确定性，无外部LLM调用）"""
         # 添加用户消息
         self.add_message(session_id, MessageRole.USER, user_input)
         
@@ -76,7 +76,7 @@ class SimpleLLMChatWithMemory:
         if not current_state:
             raise ValueError(f"会话 {session_id} 不存在")
         
-        # 记录审计日志
+        # 记录审计日志（排除 last_updated 保持哈希一致）
         state_dict = current_state.model_dump(exclude={'last_updated'})
         state_json = json.dumps(state_dict, sort_keys=True, default=str)
         self.audit_log.log_state_change(
@@ -145,11 +145,13 @@ class SimpleFinancialLLMChat(SimpleLLMChatWithMemory):
         session.set_risk_profile(risk_level, factors or {})
         
         # 记录审计日志
+        state_dict = session.model_dump(exclude={'last_updated'})
+        state_json = json.dumps(state_dict, sort_keys=True, default=str)
         self.audit_log.log_state_change(
             session_id=session_id,
             step=len(session.messages),
             action="set_risk_profile",
-            state_json=session.model_dump_json(),
+            state_json=state_json,
             state_hash=session.compute_hash(),
             metadata={"risk_level": risk_level, "factors": factors}
         )
@@ -163,7 +165,7 @@ class SimpleFinancialLLMChat(SimpleLLMChatWithMemory):
             return {"error": "会话不存在或类型错误"}
             
         return {
-            "compliance_flags": session.compliance_flags,
+            "compliance_flags": getattr(session, "compliance_flags", []),
             "risk_disclosures": session.risk_disclosures,
             "audit_trail": session.audit_trail,
             "risk_profile": session.risk_profile
