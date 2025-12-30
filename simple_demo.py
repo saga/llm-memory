@@ -5,7 +5,7 @@ import os
 import sys
 from datetime import datetime
 from simple_chat_api import SimpleFinancialLLMChat
-from state import MessageRole, MessageType
+from framework.state import MessageRole, MessageType
 
 
 def main():
@@ -16,12 +16,7 @@ def main():
     # 1. 初始化系统
     print("\n1️⃣ 初始化简化版金融科技LLM Memory系统...")
     try:
-        financial_chat = SimpleFinancialLLMChat(
-            api_key=os.getenv("OPENAI_API_KEY", "your-api-key-here"),
-            model="gpt-3.5-turbo",
-            temperature=0.1,  # 低温度确保确定性结果
-            audit_log_path="simple_demo_audit.db"
-        )
+        financial_chat = SimpleFinancialLLMChat(audit_log_path="simple_demo_audit.db")
         print("✅ 系统初始化成功")
         print(f"📊 审计日志路径: simple_demo_audit.db")
         print(f"🌡️  LLM温度设置: 0.1 (确保确定性)")

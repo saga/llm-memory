@@ -5,7 +5,9 @@ description = "Simple LLM Memory System for Completion Chat API with determinist
 readme = "README.md"
 requires-python = ">=3.8.1"
 dependencies = [
-    "pydantic>=2.5.0"
+    "pydantic>=2.5.0",
+    "fastapi>=0.111.0",
+    "uvicorn>=0.23.0"
 ]
 
 [project.optional-dependencies]
@@ -19,3 +21,7 @@ dev = [
 [build-system]
 requires = ["setuptools>=45", "wheel"]
 build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = []
+py-modules = []

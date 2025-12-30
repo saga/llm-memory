@@ -1,16 +1,17 @@
-import openai
 import os
 from typing import Dict, Any, Optional, List
 from datetime import datetime
-from simple_state import AgentState, FinancialAgentState, Message, MessageRole, MessageType
-from simple_graph import run_simple_agent_workflow  # 改用简化版
-from simple_audit import SimpleAuditLog, SimpleFinancialAuditLog
-from simple_policy import compliance_policy, memory_retention_policy
+from framework.state import AgentState, Message, MessageRole, MessageType
+from framework.graph import run_simple_agent_workflow
+from framework.audit import SimpleAuditLog
+from framework.policy import memory_retention_policy
+from app.financial.financial_state import FinancialAgentState
 import uuid
+import json
 
 
 class SimpleLLMChatWithMemory:
-    """简化版LLM Memory系统 - 不依赖LangGraph"""
+    """简化版LLM Memory系统 - 框架层通用实现"""
     
     def __init__(self, 
                  api_key: Optional[str] = None,
@@ -20,21 +21,13 @@ class SimpleLLMChatWithMemory:
                  audit_log_path: str = "audit.db",
                  graph_type: str = "base"):
         
-        self.api_key = api_key or os.getenv("OPENAI_API_KEY")
-        if not self.api_key:
-            raise ValueError("请提供OpenAI API密钥或通过环境变量OPENAI_API_KEY设置")
-        
-        openai.api_key = self.api_key
         self.model = model
         self.temperature = temperature
         self.max_tokens = max_tokens
         self.graph_type = graph_type
         
         # 初始化审计日志
-        if graph_type == "financial":
-            self.audit_log = SimpleFinancialAuditLog(audit_log_path)
-        else:
-            self.audit_log = SimpleAuditLog(audit_log_path)
+        self.audit_log = SimpleAuditLog(audit_log_path)
             
         # 会话存储
         self.sessions: Dict[str, AgentState] = {}
@@ -84,15 +77,17 @@ class SimpleLLMChatWithMemory:
             raise ValueError(f"会话 {session_id} 不存在")
         
         # 记录审计日志
+        state_dict = current_state.model_dump(exclude={'last_updated'})
+        state_json = json.dumps(state_dict, sort_keys=True, default=str)
         self.audit_log.log_state_change(
             session_id=session_id,
             step=len(current_state.messages),
             action="chat_completion",
-            state_json=current_state.model_dump_json(),
+            state_json=state_json,
             state_hash=current_state.compute_hash()
         )
         
-        # 使用简化版工作流
+        # 使用简化版工作流（确定性，未调用外部LLM）
         final_state = run_simple_agent_workflow(
             current_state,
             graph_type=self.graph_type,
@@ -117,9 +112,9 @@ class SimpleLLMChatWithMemory:
             
         return [
             {
-                "role": msg.role.value,
+                "role": msg.role.value if hasattr(msg.role, "value") else msg.role,
                 "content": msg.content,
-                "type": msg.message_type.value,
+                "type": msg.message_type.value if hasattr(msg.message_type, "value") else msg.message_type,
                 "timestamp": msg.timestamp.isoformat()
             }
             for msg in session.messages
@@ -134,7 +129,7 @@ class SimpleLLMChatWithMemory:
 
 
 class SimpleFinancialLLMChat(SimpleLLMChatWithMemory):
-    """简化版金融专用LLM Memory系统"""
+    """简化版金融专用LLM Memory系统（应用层扩展）"""
     
     def __init__(self, **kwargs):
         kwargs['graph_type'] = 'financial'
