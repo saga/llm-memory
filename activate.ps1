@@ -14,9 +14,9 @@ if (-not (Test-Path "venv")) {
 Write-Host "Environment activated successfully" -ForegroundColor Green
 Write-Host ""
 Write-Host "Available commands:" -ForegroundColor Cyan
-Write-Host "  python simple_memory.py       - Run minimal demo" -ForegroundColor White
-Write-Host "  python pydantic_ai_demo.py    - Run full demo" -ForegroundColor White
-Write-Host "  python comparison.py          - Show old vs new comparison" -ForegroundColor White
+Write-Host "  python demos/simple_memory.py       - Run minimal demo" -ForegroundColor White
+Write-Host "  python demos/pydantic_ai_demo.py    - Run full demo" -ForegroundColor White
+Write-Host "  python demos/comparison.py          - Show old vs new comparison" -ForegroundColor White
 Write-Host "  pytest tests/ -v              - Run tests" -ForegroundColor White
 Write-Host "  deactivate                    - Exit environment" -ForegroundColor White
 Write-Host ""

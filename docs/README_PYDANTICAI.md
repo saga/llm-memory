@@ -343,13 +343,15 @@ llm-memory/
 ├── framework/
 │   ├── state.py                 # 核心数据模型 (MemoryEntry, AgentState)
 │   ├── pydantic_agent.py       # ⭐ PydanticAI 实现（推荐使用）
-│   ├── summarization.py        # 记忆压缩模块
-│   ├── graph.py                # ⚠️ 旧系统：自定义状态机（已废弃）
-│   ├── nodes.py                # ⚠️ 旧系统：手动节点（已废弃）
-│   └── policy.py               # 记忆策略配置
+│   └── summarization.py        # 记忆压缩模块
+├── legacy/                      # 📦 旧代码归档（已废弃，仅供参考）
+│   ├── graph.py                # 旧状态机实现
+│   ├── nodes.py                # 旧手动节点
+│   └── *.py                    # 旧演示脚本
 ├── tests/
 │   ├── test_framework.py       # 框架测试
-│   └── test_api.py             # API 测试
+│   simple_memory.py            # ⭐ 极简演示（150 lines）
+├── pydantic_ai_demo.py         #PI 测试
 ├── pydantic_ai_demo.py         # ⭐ 完整演示
 ├── comparison.py               # 新旧系统对比
 ├── QUICKSTART_PYDANTICAI.md    # ⭐ 快速开始
@@ -364,16 +366,17 @@ llm-memory/
 
 ## 🚀 运行示例
 
-```bash
-# 1. 完整演示（推荐）
-python pydantic_ai_demo.py
+```ba极简演示（推荐入门）
+.\setup_and_run.ps1 simple_memory.py
 
 # 2. 系统对比
-python comparison.py
+.\setup_and_run.ps1 comparison.py
 
-# 3. 旧系统示例（已废弃，仅供参考）
-python simple_demo.py
-python memory_types_demo.py
+# 3. 完整功能演示
+.\setup_and_run.ps1 pydantic_ai_demo.py
+
+# 4. 旧系统示例（已归档到 legacy/）
+# 不推荐使用，仅供参考
 python summarization_demo.py
 ```
 

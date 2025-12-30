@@ -66,8 +66,12 @@ Write-Host "  Running: $Script" -ForegroundColor Green
 Write-Host "==============================================================================" -ForegroundColor Cyan
 Write-Host ""
 
-# 运行脚本
-python $Script
+# 运行脚本（支持 demos/ 目录）
+if (Test-Path "demos\$Script") {
+    python "demos\$Script"
+} else {
+    python $Script
+}
 
 Write-Host ""
 Write-Host "==============================================================================" -ForegroundColor Cyan
