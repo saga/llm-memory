@@ -323,5 +323,45 @@ def create_memory_entry(content: str, context: str, message_type: MessageType,
     )
 
 
+def memory_summarization_node(state: AgentState, auto_trigger: bool = True) -> AgentState:
+    """Periodically compress and summarize memories to control token costs.
+    
+    Args:
+        state: Current agent state
+        auto_trigger: If True, automatically check if summarization should trigger
+    
+    Returns:
+        Updated state with compressed memories
+    """
+    from framework.summarization import compress_memories, SummarizationConfig
+    
+    new_state = state.model_copy(deep=True)
+    
+    # Configure summarization policy
+    config = SummarizationConfig(
+        max_episodic_count=20,
+        max_total_tokens=4000,
+        preserve_recent_count=5,
+        preserve_high_importance=True,
+        importance_threshold=0.8
+    )
+    
+    # Attempt compression
+    compressed_state, stats = compress_memories(new_state, config=config, use_llm=False)
+    
+    # Log summarization event if triggered
+    if stats["triggered"] and stats["memories_compressed"] > 0:
+        compressed_state.add_message(
+            role=MessageRole.SYSTEM,
+            content=f"记忆压缩: {stats['memories_compressed']}条记忆 → 1条摘要 "
+                   f"(节省 {stats['tokens_saved']} tokens, 压缩率 {stats['compression_ratio']}%)",
+            message_type=MessageType.SYSTEM_MESSAGE,
+            metadata=stats
+        )
+    
+    compressed_state.increment_step()
+    return compressed_state
+
+
 def generate_general_response(state: AgentState, user_input: str) -> str:
     return "我理解您的问题。作为AI助手，我会尽力为您提供准确和有用的信息。"

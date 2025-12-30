@@ -2,7 +2,8 @@ from typing import Dict, Any, Callable
 from framework.state import AgentState
 from framework.nodes import (
     planner_node, memory_recall_node, decision_node,
-    response_generator_node, memory_storage_node
+    response_generator_node, memory_storage_node,
+    memory_summarization_node
 )
 from framework.policy import routing_policy
 
@@ -62,27 +63,55 @@ class CompiledStateMachine:
         return current_state
 
 
-def create_simple_base_graph(state_class: type = AgentState) -> CompiledStateMachine:
+def create_simple_base_graph(state_class: type = AgentState, 
+                             enable_summarization: bool = False) -> CompiledStateMachine:
+    """Create a simple state machine graph.
+    
+    Args:
+        state_class: The state class to use
+        enable_summarization: If True, add memory summarization node to workflow
+    
+    Returns:
+        Compiled state machine
+    """
     builder = SimpleStateMachine(state_class)
     builder.add_node("planner", planner_node)
     builder.add_node("memory_recall", memory_recall_node)
     builder.add_node("decision", decision_node)
     builder.add_node("response_generator", response_generator_node)
     builder.add_node("memory_storage", memory_storage_node)
+    
+    if enable_summarization:
+        builder.add_node("memory_summarization", memory_summarization_node)
+    
     builder.set_entry_point("planner")
     builder.add_edge("planner", "memory_recall")
     builder.add_edge("memory_recall", "decision")
     builder.add_edge("decision", "response_generator")
     builder.add_edge("response_generator", "memory_storage")
-    builder.add_conditional_edges(
-        "memory_storage",
-        routing_policy,
-        {
-            "continue": "planner",
-            "end": "__end__",
-            "error": "planner"
-        }
-    )
+    
+    if enable_summarization:
+        builder.add_edge("memory_storage", "memory_summarization")
+        builder.add_conditional_edges(
+            "memory_summarization",
+            routing_policy,
+            {
+                "continue": "planner",
+                "end": "__end__",
+                "error": "planner"
+            }
+        )
+    else:
+        builder.add_conditional_edges(
+            "memory_storage",
+            routing_policy,
+            {
+                "continue": "planner",
+                "end": "__end__",
+                "error": "planner"
+            }
+        )
+    
     return builder.compile()
 
 

@@ -31,6 +31,15 @@ class MemoryType(str, Enum):
     PROCEDURAL = "procedural"
 
 
+class SummarizationTrigger(str, Enum):
+    """Conditions that trigger memory summarization."""
+    TIME_BASED = "time_based"        # Summarize after certain time period
+    COUNT_BASED = "count_based"      # Summarize after N memories
+    TOKEN_BASED = "token_based"      # Summarize when token count exceeds threshold
+    MANUAL = "manual"                # Manually triggered
+    HYBRID = "hybrid"                # Combination of triggers
+
+
 class Message(BaseModel):
     role: MessageRole
     content: str
@@ -58,6 +67,13 @@ class MemoryEntry(BaseModel):
     access_count: int = Field(default=0, ge=0)
     last_accessed: Optional[datetime] = None
     
+    # Summarization fields
+    is_summarized: bool = Field(default=False)
+    original_content: Optional[str] = None
+    summarized_at: Optional[datetime] = None
+    source_memory_ids: List[str] = Field(default_factory=list)  # IDs of memories this summary consolidates
+    token_estimate: Optional[int] = None  # Estimated token count
+    
     class Config:
         validate_assignment = True
         use_enum_values = True
@@ -66,6 +82,23 @@ class MemoryEntry(BaseModel):
         """Track memory access for retrieval optimization."""
         self.access_count += 1
         self.last_accessed = datetime.utcnow()
+    
+    def summarize(self, summary_content: str, source_ids: Optional[List[str]] = None) -> None:
+        """Mark memory as summarized and store original content."""
+        if not self.is_summarized:
+            self.original_content = self.content
+        self.content = summary_content
+        self.is_summarized = True
+        self.summarized_at = datetime.utcnow()
+        if source_ids:
+            self.source_memory_ids = source_ids
+    
+    def estimate_tokens(self) -> int:
+        """Estimate token count (rough approximation: ~4 chars per token)."""
+        if self.token_estimate is not None:
+            return self.token_estimate
+        self.token_estimate = len(self.content) // 4
+        return self.token_estimate
 
 
 class AgentState(BaseModel):
